@@ -43,7 +43,7 @@ def main():
 
     # 1. 加载数据
     print("加载数据...")
-    my_119_regions = None
+    my_119_regions = None #[1,2,3,...] 指定要使用的区域ID列表，或设置为None使用所有特征
     data = load_data(
         data_path=args.data_path,
         selected_regions=my_119_regions,
