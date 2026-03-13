@@ -1,4 +1,3 @@
-```markdown
 # MRI-based Brain Age Prediction
 
 This project implements a brain age prediction model based on the methodology described in the Nature Medicine paper:  
