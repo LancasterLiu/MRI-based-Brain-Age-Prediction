@@ -90,7 +90,7 @@ def main():
         model.fit(X_train, y_train)
         train_metrics = model.evaluate(X_train, y_train)
 
-        # 4. 验证集评估（可选调参后）
+        # 4. 验证集评估
         val_metrics = model.evaluate(X_val, y_val)
         print(f"\n验证集 MAE: {val_metrics['MAE']:.4f}, R²: {val_metrics['R2']:.4f}")
 

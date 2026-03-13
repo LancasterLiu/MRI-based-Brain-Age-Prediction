@@ -40,7 +40,6 @@ def load_data(data_path, selected_regions=None, test_size=0.2, val_size=0.2, ran
     if selected_regions is not None:
         # 根据选定的区域ID生成对应的列名，例如 'atlas_1', 'atlas_2', ...
         selected_cols = [f"{feature_prefix}{rid}" for rid in selected_regions if f"{feature_prefix}{rid}" in df.columns]
-        # 可以添加未找到列的警告
         feature_cols = selected_cols
     else:
         feature_cols = [col for col in df.columns if col.startswith(feature_prefix)]

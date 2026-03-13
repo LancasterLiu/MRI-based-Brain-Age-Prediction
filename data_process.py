@@ -20,9 +20,9 @@ os.makedirs(TMP_DIR, exist_ok=True)
 
 # 读取参与者信息
 df_info = pd.read_csv(CSV_PATH).set_index('eid')
-# 构建年龄列：优先使用 age_2，若缺失则使用 age_0
+# 优先使用 age_2，若缺失则使用 age_0
 df_info['age'] = df_info['age_2'].fillna(df_info['age_0'])
-# 删除年龄或性别缺失的参与者（二者必须齐全才能建模）
+# 删除年龄或性别缺失的参与者
 df_info = df_info.dropna(subset=['age', 'sex'])
 print(f"有效参与者数量: {len(df_info)}")
 
@@ -61,7 +61,7 @@ def get_files(tmp_dir):
         'brain_to_mni': os.path.join(base, "T1_brain_to_MNI.nii.gz"),
     }
 
-def warp_atlas_to_native(eid, files):
+def warp_atlas_to_native(files):
     """将MNI空间图谱变换到个体T1空间（仅仿射，若存在非线性可扩展）"""
     atlas_mni=ATLAS_MNI # 图谱图像路径（如 AAL3v1_1mm.nii.gz）
     pve_file=files['pve_0'] # 参考图像（灰质概率图），用于确定输出网格
@@ -102,7 +102,7 @@ def warp_atlas_to_native(eid, files):
         cval=0
     )
 
-    # 保存结果，使用参考图像的affine（保证空间位置正确）
+    # 保存结果，使用参考图像的affine
     out_img = nib.Nifti1Image(transformed.astype(np.int16), ref_affine)
     nib.save(out_img, output_path)    
     return output_path
@@ -168,7 +168,7 @@ for zip_path in tqdm(glob(DATA_ROOT + "/*.zip")):
         continue
     
     # 1. 变换图谱到个体空间
-    atlas_native = warp_atlas_to_native(eid, files)
+    atlas_native = warp_atlas_to_native(files)
     
     # 2. 计算区域体积
     roi_vols = compute_roi_volumes(files['pve_0'], atlas_native)
@@ -190,7 +190,6 @@ for zip_path in tqdm(glob(DATA_ROOT + "/*.zip")):
 # ==================== 保存结果 ====================
 if all_features:
     feat_df = pd.DataFrame(all_features).set_index('eid')
-    # final_df = df_info.join(feat_df, how='inner')
     feat_df.to_csv(OUTPUT_CSV)
     print(f"Saved {len(feat_df)} participants to {OUTPUT_CSV}")
 else:

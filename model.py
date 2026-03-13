@@ -121,7 +121,6 @@ class BrainAgeModel:
         if not self.is_fitted:
             raise RuntimeError("模型尚未训练，无法保存")
         if self.model_type == 'cnn':
-            # 对于CNN，我们需要保存模型状态字典和初始化参数
             torch.save({
                 'model_state_dict': self.model.state_dict(),
                 'model_type': self.model_type,
