@@ -3,7 +3,7 @@ import argparse
 import os
 import time
 import numpy as np
-from sklearn.metrics import r2_score, mean_absolute_error
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import torch
 from tqdm import tqdm
 from data_loader import load_data
@@ -89,16 +89,15 @@ def main():
         print("训练模型...")
         model.fit(X_train, y_train)
         train_metrics = model.evaluate(X_train, y_train)
+        print(f"训练集 MAE: {train_metrics['MAE']:.4f}, R²: {train_metrics['R2']:.4f}, RMSE: {train_metrics['RMSE']:.4f}")
 
         # 4. 验证集评估
         val_metrics = model.evaluate(X_val, y_val)
-        print(f"\n验证集 MAE: {val_metrics['MAE']:.4f}, R²: {val_metrics['R2']:.4f}")
-
+        print(f"\n验证集 MAE: {val_metrics['MAE']:.4f}, R²: {val_metrics['R2']:.4f}, RMSE: {val_metrics['RMSE']:.4f}")
     # 5. 测试集评估（未校正偏差）
     if args.test:
         test_metrics_raw = model.evaluate(X_test, y_test)
-        print(f"\n测试集 (原始) MAE: {test_metrics_raw['MAE']:.4f}, R²: {test_metrics_raw['R2']:.4f}")
-
+        print(f"\n测试集 (原始) MAE: {test_metrics_raw['MAE']:.4f}, R²: {test_metrics_raw['R2']:.4f}, RMSE: {test_metrics_raw['RMSE']:.4f}")
         # 6. 年龄偏差校正
         # 在训练集上拟合校正参数
         y_train_pred = model.predict(X_train)
@@ -116,7 +115,8 @@ def main():
         from sklearn.metrics import mean_absolute_error
         mae_corrected = mean_absolute_error(y_test, y_test_corrected)
         r2_corrected = r2_score(y_test, y_test_corrected)
-        print(f"测试集 (校正后) MAE: {mae_corrected:.4f}, R²: {r2_corrected:.4f}")
+        rmse_corrected = np.sqrt(mean_squared_error(y_test, y_test_corrected))
+        print(f"测试集 (校正后) MAE: {mae_corrected:.4f}, R²: {r2_corrected:.4f}, RMSE: {rmse_corrected:.4f}")
 
     # 7. 保存模型和scaler
     model.save(output_model)
@@ -130,7 +130,7 @@ def main():
     metrics = {
         'val': val_metrics,
         'test_raw': test_metrics_raw,
-        'test_corrected': {'MAE': mae_corrected, 'R2': r2_corrected},
+        'test_corrected': {'MAE': mae_corrected, 'R2': r2_corrected, 'RMSE': rmse_corrected},
         'best_params': best_params if args.tune else None
     }
     with open(output_metrics, 'w') as f:

@@ -144,7 +144,8 @@ print(f"共加载 {len(region_ids)} 个区域")
 all_features = []
 missing=[]
 
-for zip_path in tqdm(glob(DATA_ROOT + "/*.zip")):
+# 由于使用的数据仅为一小部分GT，所以此处是根据压缩包（数据）来进行遍历的
+for zip_path in tqdm(glob(DATA_ROOT + "/*_2_0.zip")): # 确保模式为所需的
     base = os.path.basename(zip_path)
     eid = int(base.split('_')[0])
     print(f"\nProcessing {eid}...")
