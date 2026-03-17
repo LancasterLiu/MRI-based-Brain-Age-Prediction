@@ -43,10 +43,44 @@ def main():
 
     # 1. 加载数据
     print("加载数据...")
-    my_119_regions = None #[1,2,3,...] 指定要使用的区域ID列表，或设置为None使用所有特征
+    AAL3_119_regions = [
+        # ===== Frontal =====
+        1,2,3,4,5,6,7,8,9,10,
+        11,12,13,14,15,16,17,18,19,20,
+        21,22,23,24,25,26,27,28,29,30,31,32,
+
+        # ===== Insula & Cingulate =====
+        33,34,35,36,37,38,39,40,
+
+        # ===== Limbic =====
+        41,42,43,44,45,46,
+
+        # ===== Temporal =====
+        81,82,83,84,85,86,87,88,89,90,
+        91,92,93,94,95,96,
+
+        # ===== Parietal =====
+        61,62,63,64,65,66,67,68,69,70,
+
+        # ===== Occipital =====
+        49,50,51,52,53,54,55,56,57,58,59,60,
+
+        # ===== Subcortical GM =====
+        71,72,73,74,75,76,77,78,79,80,
+
+        # ===== Thalamus =====
+        121,122,123,124,125,126,127,128,
+        129,130,131,132,133,134,135,136,
+
+        # ===== Basal forebrain / accumbens =====
+        157,158,
+
+        # ===== Midbrain GM =====
+        159,160,161,162,163,164
+    ]
     data = load_data(
         data_path=args.data_path,
-        selected_regions=my_119_regions,
+        selected_regions=AAL3_119_regions,
         test_size=args.test_size,
         val_size=args.val_size,
         random_state=args.random_state,
@@ -81,8 +115,13 @@ def main():
         # 用最佳参数创建最终模型
         model = BrainAgeModel(model_type=args.model_type, **best_params)
     else:
-        # 使用默认参数
-        model = BrainAgeModel(model_type=args.model_type, input_dim=input_dim, epochs=args.epochs)
+        if args.model_type in ['lasso', 'elasticnet']:
+            default_params = {'alpha': 0.1}
+            if args.model_type == 'elasticnet':
+                default_params['l1_ratio'] = 0.5
+            model = BrainAgeModel(model_type=args.model_type, **default_params)
+        else:
+            model = BrainAgeModel(model_type=args.model_type, input_dim=input_dim, epochs=args.epochs)
 
     # 3. 训练模型
     if args.train:
