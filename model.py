@@ -11,22 +11,25 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 class CNN1D(nn.Module):
-    def __init__(self, input_dim=171, hidden_channels=64, kernel_size=3, epochs=10,
-                 batch_size=32, learning_rate=0.001):
+    def __init__(self, input_dim=171, hidden_channels=[64, 32], kernel_size=3, epochs=10,
+                 batch_size=32, learning_rate=0.01):
         super().__init__()
         self.batch_size = batch_size
         self.epochs = epochs
         self.learning_rate = learning_rate
         self.input_dim = input_dim
-        self.conv1 = nn.Conv1d(in_channels=1, out_channels=hidden_channels,
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=hidden_channels[0],
+                                kernel_size=kernel_size, padding='same')
+        self.conv2 = nn.Conv1d(in_channels=hidden_channels[0], out_channels=hidden_channels[1],
                                 kernel_size=kernel_size, padding='same')
         self.relu = nn.ReLU()
         self.pool = nn.AdaptiveAvgPool1d(1)  # 全局平均池化
-        self.fc = nn.Linear(hidden_channels, 1)
-
+        self.fc = nn.Linear(hidden_channels[1], 1)
     def forward(self, x):
         # x shape: (batch, 1, input_dim)
         x = self.conv1(x)
+        x = self.relu(x)
+        x = self.conv2(x)
         x = self.relu(x)
         x = self.pool(x).squeeze(-1)  # (batch, hidden_channels)
         x = self.fc(x)                 # (batch, 1)
@@ -76,6 +79,7 @@ class BrainAgeModel:
 
             criterion = nn.MSELoss()
             optimizer = optim.Adam(self.model.parameters(), lr=self.model.learning_rate)
+            learning_rate_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.5)
 
             self.model.train()
             for epoch in tqdm(range(self.model.epochs)):
@@ -86,6 +90,7 @@ class BrainAgeModel:
                     loss = criterion(outputs, batch_y)
                     loss.backward()
                     optimizer.step()
+                    learning_rate_scheduler.step()
                     total_loss += loss.item()
                 if (epoch+1) % 10 == 0:
                     print(f"Epoch {epoch+1}/{self.model.epochs}, Loss: {total_loss/len(dataloader):.4f}")

@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler
 import os
 
 def load_data(data_path, selected_regions=None, test_size=0.2, val_size=0.2, random_state=42,
-              exclude_sex=True, target_col='age', feature_prefix='atlas_'):
+              exclude_sex=False, target_col='age', feature_prefix='atlas_'):
     """
     加载并预处理脑龄预测数据。
 
