@@ -43,7 +43,7 @@ def main():
 
     # 1. 加载数据
     print("加载数据...")
-    AAL3_119_regions = [
+    MUSE_regions = [
         # ===== Frontal =====
         1,2,3,4,5,6,7,8,9,10,
         11,12,13,14,15,16,17,18,19,20,
@@ -80,7 +80,7 @@ def main():
     ]
     data = load_data(
         data_path=args.data_path,
-        selected_regions=AAL3_119_regions,
+        selected_regions=MUSE_regions,
         test_size=args.test_size,
         val_size=args.val_size,
         random_state=args.random_state,
@@ -104,6 +104,7 @@ def main():
         elif args.model_type == 'elasticnet':
             param_grid = {'alpha': [0.001, 0.01, 0.1], 'l1_ratio': [0.2, 0.5, 0.8]}
             base_model = BrainAgeModel(model_type='elasticnet')
+        
         else:
             raise ValueError("不支持的模型类型")
 
@@ -115,10 +116,13 @@ def main():
         # 用最佳参数创建最终模型
         model = BrainAgeModel(model_type=args.model_type, **best_params)
     else:
-        if args.model_type in ['lasso', 'elasticnet']:
-            default_params = {'alpha': 0.1}
-            if args.model_type == 'elasticnet':
-                default_params['l1_ratio'] = 0.5
+        if args.model_type in ['lasso', 'svr', 'elasticnet']:
+            if args.model_type == 'svr':
+                default_params = {'C': 1.0, 'gamma': 'scale'}
+            elif args.model_type == 'lasso':
+                default_params = {'alpha': 0.01}
+            elif args.model_type == 'elasticnet':
+                default_params = {'alpha': 0.01, 'l1_ratio': 0.5}
             model = BrainAgeModel(model_type=args.model_type, **default_params)
         else:
             model = BrainAgeModel(model_type=args.model_type, input_dim=input_dim, epochs=args.epochs)
@@ -141,8 +145,6 @@ def main():
         # 在训练集上拟合校正参数
         y_train_pred = model.predict(X_train)
         y_train_corrected = model.age_bias_correction(y_train, y_train_pred)  # 实际返回校正后的值，同时内部拟合了线性模型
-        # 注意：age_bias_correction 方法返回校正后的预测值，但我们需要保存校正器以便在测试集上使用
-        # 为了简单，我们单独实现校正逻辑
         from sklearn.linear_model import LinearRegression
         bias_corrector = LinearRegression()
         bias_corrector.fit(y_train.reshape(-1, 1), y_train_pred)
